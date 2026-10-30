@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+input/holdings.csv
+input/positions.csv
