@@ -182,6 +182,7 @@ def main():
     else:
         from data import YahooProvider; p = YahooProvider()
         if not os.path.exists("eligible_universe.json"):
+            open("index.html", "w").write("<!doctype html><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Options Income Report</title><body style='font:16px/1.5 sans-serif;max-width:640px;margin:40px auto;padding:0 16px'><h1>Options Income Report</h1><p><b>Setup needed.</b> The stock universe file (eligible_universe.json) has not been added yet, so nothing was scanned.</p><ol><li>Export a screener CSV (see SCREENING.md) into the input folder.</li><li>Run <code>python build_universe.py</code>.</li><li>Commit eligible_universe.json, then re-run the workflow.</li></ol><p>Updated: " + str(TODAY) + "</p></body>")
             print("SETUP NEEDED: eligible_universe.json is missing. Follow SCREENING.md: put your screener CSV in input/, run build_universe.py, commit the JSON. Nothing scanned.")
             sys.exit(0)
         uni = json.load(open("eligible_universe.json"))["stocks"]
@@ -223,6 +224,7 @@ def main():
     html = report.render(ctx)
     name = "reports/options_report_%s%s.html" % (TODAY, "_MOCK" if mock else "")
     open(name, "w").write(html); open("reports/latest.html", "w").write(html)
+    if not mock: open("index.html", "w").write(html)   # GitHub Pages shows this at the site root
     json.dump(ctx, open("data/last_scan.json", "w"), indent=1, default=str)
     for f in sorted(glob.glob("reports/options_report_*.html"))[:-30]: os.remove(f)
     print(f"Scanned {len(uni)} | put candidates {len(puts)} | picks {len(picks)} | covered calls {len(calls)} | market OK: {mkt['ok']}")
