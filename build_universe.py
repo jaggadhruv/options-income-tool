@@ -37,15 +37,35 @@ def pick(df, key):
             return low[a]
     return None
 
+def load_json_list(path):
+    """Accept an eligible_universe.json from your swing tool: a list of tickers, a list of dicts,
+    or a dict holding such a list under stocks/tickers/universe/eligible."""
+    d = json.load(open(path))
+    if isinstance(d, dict):
+        for k in ("stocks", "tickers", "universe", "eligible", "symbols"):
+            if k in d:
+                d = d[k]; break
+        else:
+            d = [{"ticker": k, **(v if isinstance(v, dict) else {})} for k, v in d.items()]
+    rows = [{"ticker": x} if isinstance(x, str) else dict(x) for x in d]
+    df = pd.DataFrame(rows)
+    if "ticker" not in [c.lower() for c in df.columns] and "symbol" not in [c.lower() for c in df.columns]:
+        sys.exit("JSON has no ticker/symbol field. Keys found: %s" % list(df.columns))
+    print("Note: a JSON list usually has no market cap/debt/ROE, so those quality filters can only apply where the field exists.")
+    return df
+
 def main():
     path = sys.argv[1] if len(sys.argv) > 1 else None
     if not path:
-        files = glob.glob("input/*.csv")
-        files = [f for f in files if "holdings" not in f and "positions" not in f]
+        files = glob.glob("input/*.csv") + glob.glob("input/*.json")
+        files = [f for f in files if not any(w in f for w in ("holdings", "positions", "journal", "example"))]
         if len(files) != 1:
             sys.exit("Put exactly one screener CSV in input/ (or pass a path). Found: %s" % files)
         path = files[0]
-    df = pd.read_csv(path)
+    if path.lower().endswith(".json"):
+        df = load_json_list(path)
+    else:
+        df = pd.read_csv(path)
     col = {k: pick(df, k) for k in ALIASES}
     if not col["ticker"]:
         sys.exit("No Ticker/Symbol column found. Columns: %s" % list(df.columns))

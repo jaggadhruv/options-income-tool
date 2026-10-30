@@ -186,6 +186,8 @@ def main():
             print("SETUP NEEDED: eligible_universe.json is missing. Follow SCREENING.md: put your screener CSV in input/, run build_universe.py, commit the JSON. Nothing scanned.")
             sys.exit(0)
         uni = json.load(open("eligible_universe.json"))["stocks"]
+    for u in uni:   # unknown sector must not make unrelated stocks block each other
+        if str(u.get("sector", "Unknown")).lower() in ("unknown", "nan", "", "none"): u["sector"] = "Unknown-" + u["ticker"]
     sectors = {u["ticker"]: u["sector"] for u in uni}
     mkt = regime(p)
     funnel, puts, calls = {}, [], []
