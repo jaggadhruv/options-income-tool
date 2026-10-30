@@ -181,7 +181,9 @@ def main():
         p.history = lambda s, days=400: (pd.DataFrame({"Close": np.full(260, 20.0 if s == "^VIX" else 400.0)}) if s in ("^VIX", "SPY") else orig_hist(s, days))
     else:
         from data import YahooProvider; p = YahooProvider()
-        if not os.path.exists("eligible_universe.json"): sys.exit("Run build_universe.py first (see SCREENING.md).")
+        if not os.path.exists("eligible_universe.json"):
+            print("SETUP NEEDED: eligible_universe.json is missing. Follow SCREENING.md: put your screener CSV in input/, run build_universe.py, commit the JSON. Nothing scanned.")
+            sys.exit(0)
         uni = json.load(open("eligible_universe.json"))["stocks"]
     sectors = {u["ticker"]: u["sector"] for u in uni}
     mkt = regime(p)
